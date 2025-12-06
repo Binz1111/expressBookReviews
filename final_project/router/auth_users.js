@@ -35,7 +35,7 @@ regd_users.post("/login", (req, res) => {
   // Generate JWT token
   const token = jwt.sign(
     { username: username },
-    "your_secret_key", // Use environment variable in production
+    "your_secret_key",
     { expiresIn: "1h" }
   );
   
@@ -45,7 +45,7 @@ regd_users.post("/login", (req, res) => {
   return res.status(200).json({ message: "Login successful", token: token });
 });
 
-// Add a book review
+// Add or modify a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
   const isbn = req.params.isbn;
   const review = req.body.review;
@@ -71,6 +71,30 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   
   return res.status(200).json({ 
     message: "Review added/updated successfully",
+    reviews: books[isbn].reviews
+  });
+});
+
+// Delete book review
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+  const isbn = req.params.isbn;
+  const username = req.session.authorization?.username;
+  
+  // Check if book exists
+  if (!books[isbn]) {
+    return res.status(404).json({ message: "Book not found" });
+  }
+  
+  // Check if reviews exist
+  if (!books[isbn].reviews || !books[isbn].reviews[username]) {
+    return res.status(404).json({ message: "Review not found" });
+  }
+  
+  // Delete the user's review
+  delete books[isbn].reviews[username];
+  
+  return res.status(200).json({ 
+    message: "Review deleted successfully",
     reviews: books[isbn].reviews
   });
 });
